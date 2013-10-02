@@ -255,32 +255,26 @@ class Remora_OJS_Core {
 	}
 
 	/**
-	 * Cleans up DOM for document ingest
-	 * NOTE: INCOMPLETE
+	 * Loads pages which required direct interaction with the journal CMS
 	 *
 	 * Parameters:
-	 * @dom - DOM object
+	 * @page (string) The journal page to pull up
 	 *
 	 * Returns:
-	 * DOM object with certain tags removed
+	 * HTML String
 	 */
-	function strip_dom_elements($dom){
-		$marked_nodes = array(
-			'html',
-			'body',
-			'title',
-			'head',
-			);
 
-		$marked_node->parentNode->removeChild($marked_node);
+	function action_page($path, $id = null){
+		echo get_action_page($path, $id);
+	}
 
-		foreach ($dom->getElementsByTagName('a') as $link) {
-			$subject = $link->getAttribute('href');
-			$link->setAttribute('href', str_replace($this->journal_url.'/article/view/', $this->local_url.'/', $subject));
-			$dom->saveHTML();
-		}
+	function get_action_page($path, $id = null){
+		$dom_id = ($id) ? 'id="'.$id.'"' : null;
+		$src_path = ($path[0] == '/') ? $this->journal_url.$path : $this->journal_url.'/'.$path;
 
-		return $dom;
+		$page = '<iframe src="'.$src_path.'" class="remora-frame" '.$dom_id.'></iframe>';
+
+		return $page;
 	}
 
 }

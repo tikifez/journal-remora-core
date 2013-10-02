@@ -1,6 +1,6 @@
 <?php
 /**
- * @package Hello_Dolly
+ * @package Journal_Remora
  * @version 1.6
  */
 /*
@@ -14,19 +14,25 @@ Author URI: http://cdrs.columbia.edu
 class Journal_Remora {
 
 	function __construct(){
-		add_action( 'plugins_loaded', array($this, 'load_resources' ), 1 );
+		self::load_resources();
 	}
 
-	// This just echoes the chosen line, we'll position it later
+	/**
+	 * Loads plugin resources
+	 */
 	function load_resources() {
+		// Required classes
 		require_once(plugin_dir_path( __FILE__).'/classes/Remora_OJS_Core.php');
 		if(include_once(plugin_dir_path( __FILE__).'/classes/Remora_OJS_Widget.php')) {
 			add_action( 'widgets_init', array('Remora_OJS_Widget', 'register_widget') );
 		}
+
+		// Scripts and Styles
+		wp_enqueue_script('remora-iframe', plugin_dir_path( __FILE__) . 'assets/js/remora-iframe.js', array());
 	}
 }
-// Now we set that function up to execute when the admin_notices action is called
-$journal_remora = new Journal_Remora();
+
+add_action( 'plugins_loaded', array('Journal_Remora', 'load_resources' ) );
 
 function vox($utterance){
 	echo "<pre>".__($utterance)."</pre>";
