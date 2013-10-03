@@ -265,10 +265,10 @@ class Remora_OJS_Core {
 	 */
 
 	function action_page($path, $id = null){
-		echo get_action_page($path, $id);
+		echo $this->get_action_page($path, $id);
 	}
 
-	function get_action_page($path, $id = null){
+	function get_action_page ($path, $id = null){
 		$dom_id = ($id) ? 'id="'.$id.'"' : null;
 		$src_path = ($path[0] == '/') ? $this->journal_url.$path : $this->journal_url.'/'.$path;
 

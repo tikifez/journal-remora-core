@@ -26,13 +26,18 @@ class Journal_Remora {
 		if(include_once(plugin_dir_path( __FILE__).'/classes/Remora_OJS_Widget.php')) {
 			add_action( 'widgets_init', array('Remora_OJS_Widget', 'register_widget') );
 		}
-
-		// Scripts and Styles
-		wp_enqueue_script('remora-iframe', plugin_dir_path( __FILE__) . 'assets/js/remora-iframe.js', array());
+	}
+	/**
+	 * Loads plugin assets (css, js, etc.)
+	 */
+	function load_assets(){
+		wp_enqueue_style('remora', plugin_dir_url( __FILE__) . 'assets/css/remora.css', false);
+		wp_enqueue_script('remora-iframe', plugin_dir_url( __FILE__) . 'assets/js/remora-iframe.js', array('jquery'));
 	}
 }
 
 add_action( 'plugins_loaded', array('Journal_Remora', 'load_resources' ) );
+add_action( 'wp_enqueue_scripts', array('Journal_Remora', 'load_assets') );
 
 function vox($utterance){
 	echo "<pre>".__($utterance)."</pre>";
