@@ -27,16 +27,22 @@ class Remora_OJS_Widget extends WP_Widget {
 		echo $args['before_widget'];
 		if ( ! empty( $title ) )
 			echo $args['before_title'] . $title . $args['after_title'];
+
+			// Show each requested article excerpt
 			foreach($articles as $article){
 			$abstract = $remoraOJS->get_abstract_by_id($article, array('excerpt_length'=> 10));
+
 			if (!$abstract) continue;
+
 			echo '<div class="excerpt">
-			<h3 class="excerpt-authors">
+			<header>
+			<h4 class="excerpt-title">
 			<a href="'.$abstract->link.'">'.$abstract->title.'</a>
-			</h3>
-			<div class="excerpt-authors">
+			</h4>
+			<div class="excerpt-authors byline">
 			'.$abstract->authors.'
 			</div>
+			</header>
 			<div class="excerpt-text">
 			'.$abstract->excerpt.'
 			</div>
