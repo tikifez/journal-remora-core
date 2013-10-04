@@ -1,23 +1,25 @@
 jQuery(function($) {
+	
 	$( document ).ready(function() {
-		// Get styles for inserting into the frame later
-		var parent_styles = $('link[rel=stylesheet]').clone();
 
-		// Add all styles into iframes
-		$("link[type='text/css']").clone().prependTo($("iframe.remora-frame").contents().find("head"));
+		// Initial frame fix
 		$('iframe.remora-frame').load(function() { 
-
-			// Add styles
-			$(this).contents().find('head').append(parent_styles);
-			//$(this).contents().prepend('<h1>wha?</h1>');
+			// Add parent styles to frame
+			$('link[rel=stylesheet]').clone().prependTo($("iframe.remora-frame").contents().find("head"));
 
 			// Now that we're done potentially changing the height of things, 
 			// change height of frame to match height of contents
-			$(this).height( $(this).contents().height() );
-
-
+			resizeFrame($(this));
 		});
+
+		// Make sure it stays the same size when the window is resized
+		$(window).resize(function(){resizeFrame($('iframe.remora-frame')); });
+
 	});
-	
+
+	function resizeFrame(){
+		console.debug('Resized frame');
+		$('iframe.remora-frame').height( $('iframe.remora-frame').contents().height() );
+	}
 });
 
