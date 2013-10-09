@@ -182,7 +182,7 @@ class Remora_OJS_Core {
 		}
 		else $issue_id = 'current';
 
-		$issue_page = "/issue/".$issue_id;
+		$issue_page = "/issue/".$issue_id."/showToc";
 		$issue = $this->get_journal_path($issue_page, $asAjax);
 		$issue->type = "issue";
 
@@ -197,7 +197,7 @@ class Remora_OJS_Core {
 		$doc = new DOMDocument();
 		$doc->loadHTML('<?xml encoding="UTF-8">' . $journal_page->output);
 
-		$this->make_links_local($doc);
+		$this->make_links_local(&$doc);
 		$this->clean_html($doc);
 
 		echo $doc->saveHTML();
