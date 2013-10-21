@@ -18,7 +18,6 @@ jQuery(function($) {
 	});
 
 	function resizeFrame(){
-		console.debug('Resized frame');
 		$('iframe.remora-frame').height( $('iframe.remora-frame').contents().height() );
 	}
 });

@@ -85,7 +85,12 @@ class Remora_OJS_Core {
 
 		// Load the output into a DOMDocument to get the values we need
 		$doc = new DOMDocument();
+		$dom -> substituteEntities = false;
 		$doc->loadHTML('<?xml encoding="UTF-8">' . $article->output);
+
+		// A bit of a workaround to get special characters to work with the saveXML method we have to use later
+		// output 
+		//$docXML->text = $doc->saveHTML($article_text); 
 
 		// If there's no title, don't bother
 		if(!$doc->getElementById('articleTitle')) return false;
@@ -102,25 +107,37 @@ class Remora_OJS_Core {
 		$abstract->link = preg_replace('#\/article\/view\/(\d*)\/?$#', $this->local_url.'/\1', $article_page);
 
 		// Get the abstract Text
+		//$article_text->createEntityReference("amp");
 		$article_text = $doc->getElementById('articleAbstract');
-
 		// Remove the <h4></h4> and <br> at the top
 		if(get_class($article_text) == 'DOMElement') {
 			$text_h4 = $article_text->getElementsByTagName('h4');
 			$article_text->removeChild($text_h4->item(0));
-			$text_br = $article_text->getElementsByTagName('br');
-			$article_text->removeChild($text_br->item(0));
-			$abstract->text = $doc->saveHTML($article_text);
+			while ($text_br = $article_text->getElementsByTagName('br')->item(0)) 
+				$article_text->removeChild($text_br);
 		}
+
+		// Import the abstract dom node into a new domdocument to deal with PHP < 5.3.6
+		$abstract->dom = new DomDocument();
+		$abstract->dom->loadXML("<article></article>");
+		$article_abstract_node = $abstract->dom->importNode($article_text, true);
+		$abstract->dom->documentElement->appendChild($article_abstract_node);
+		$abstract->text = $abstract->dom->saveHTML();
+
 
 		// Filter out the excerpt from the text
 		$excerpt = strip_tags($abstract->text);
-		$excerpt_words = str_word_count($excerpt, 1);
-		$excerpt_length = (array_key_exists('excerpt_length', $args) && is_int($args['excerpt_length']) ) ? $args['excerpt_length'] : 55;
+		$excerpt = preg_replace('/\&nbsp;/', ' ', $excerpt);
+
+		// Truncate the excerpt to the proper length
+		$excerpt_words_length = str_word_count($excerpt);
+		$excerpt_words = explode(' ', $excerpt);
+		$excerpt_length = (is_int($args['excerpt_length']) ) ? $args['excerpt_length'] : 55;
+
 		foreach($excerpt_words as $word){
 			static $i;
 			$i++;
-			if($i > $excerpt_length) break;
+			if($i > $excerpt_length) { $i = 0; break; }
 			$abstract->excerpt .= $word.' ';
 		}
 		$abstract->excerpt .= (array_key_exists('more', $args)) ? $args['more'] : '[&hellip;]';
@@ -194,8 +211,9 @@ class Remora_OJS_Core {
 	 */
 	function show_page($journal_page){
 		// Load the output into a DOMDocument for modification
+		$pageEncoding = 'UTF-8';
 		$doc = new DOMDocument();
-		$doc->loadHTML('<?xml encoding="UTF-8">' . $journal_page->output);
+		$doc->loadHTML('<?xml encoding="'.$pageEncoding.'">' . $journal_page->output);
 
 		$this->make_links_local(&$doc);
 		$this->clean_html($doc);
