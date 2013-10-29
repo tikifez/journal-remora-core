@@ -39,7 +39,4 @@ class Journal_Remora {
 add_action( 'plugins_loaded', array('Journal_Remora', 'load_resources' ) );
 add_action( 'wp_enqueue_scripts', array('Journal_Remora', 'load_assets') );
 
-function vox($utterance){
-	echo "<pre>".__($utterance)."</pre>";
-}
 ?>

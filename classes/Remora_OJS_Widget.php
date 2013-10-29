@@ -15,7 +15,7 @@ class Remora_OJS_Widget extends WP_Widget {
 
 
 	public function register_widget() {
-	    register_widget( 'Remora_OJS_Widget' );
+		register_widget( 'Remora_OJS_Widget' );
 	}
 
 	public function widget( $args, $instance ) {
@@ -29,8 +29,10 @@ class Remora_OJS_Widget extends WP_Widget {
 			echo $args['before_title'] . $title . $args['after_title'];
 
 			// Show each requested article excerpt
-			foreach($articles as $article){
-			$abstract = $remoraOJS->get_abstract_by_id($article, array('excerpt_length'=> 10));
+		foreach($articles as $article){
+			if(!is_int($article)) continue;
+			
+			$abstract = $remoraOJS->get_abstract_by_id($article, array('excerpt_length'=> 10), cfct_get_option('cfct_ojs_db') );
 
 			if (!$abstract) continue;
 
@@ -56,7 +58,7 @@ class Remora_OJS_Widget extends WP_Widget {
 			</div>';
 		}
 
-			echo $args['after_widget'];
+		echo $args['after_widget'];
 	}
 
 	public function form( $instance ) {

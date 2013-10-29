@@ -18,8 +18,21 @@ class Remora_OJS_Core {
 	 * @path (string) Path in the journal to retrieve
 	 * @asAjax (bool) Whether to retreive the file as AJAX
 	 */
-	function get_journal_path($journal_page, $asAjax = true){
+	function get_journal_path($journal_page, $asAjax = true, $source_only = false){
+
+		// Build the URL
 		$page->url = ($asAjax) ? $this->journal_url.$journal_page."?ajax=".(bool) $asAjax : $this->journal_url.$journal_page;
+
+		// Get any redirects for checking
+		$page->page_headers = get_headers($page->url, 1);
+		
+		// If only the exact url with no redirects are desired, fail if that's not what we're getting
+
+		if($source_only && $page->url != $page->page_headers['Location']) {
+			return false;
+		}
+
+		// Get the resolved, rendered page
 		$page->output = stream_get_contents(( fopen($page->url, 'r')) );
 
 		return $page;
@@ -196,11 +209,11 @@ class Remora_OJS_Core {
 		// Allow the issue id to be either "current" or an int
 		if($journal_issue_id != 'current'){
 			if(is_int($journal_issue_id)) $issue_id = (int) $journal_issue_id;
+			$issue = $this->get_journal_path("/issue/view/".$issue_id."/showToc", $asAjax, true);
 		}
-		else $issue_id = 'current';
+		else $issue = $this->get_journal_path("/issue/current/showToc", $asAjax); 
 
-		$issue_page = "/issue/".$issue_id."/showToc";
-		$issue = $this->get_journal_path($issue_page, $asAjax);
+		if(!$issue) return $issue;
 		$issue->type = "issue";
 
 		return $issue;
@@ -219,6 +232,17 @@ class Remora_OJS_Core {
 		$this->clean_html($doc);
 
 		echo $doc->saveHTML();
+	}
+
+
+	/**
+	 * Gets the issue id from the get data
+	 *
+	 * Returns: Int or null.
+	 */
+	function get_requested_issue_id() {
+		$issue_id = (int) $_GET['issue_id'];
+		return ($issue_id) ? $issue_id : null ;
 	}
 
 
@@ -293,6 +317,59 @@ class Remora_OJS_Core {
 		$page = '<iframe src="'.$src_path.'" class="remora-frame" '.$dom_id.'></iframe>';
 
 		return $page;
+	}
+
+	/**
+	 * Gets the OJS abstracts direct from the db
+	 *
+	 * @abstracts - Array of abstract ids
+	 *
+	 * Returns array of abstract titles and abstracts
+	 */
+	function get_ojs_abstracts($abstracts, $db){
+		$gof = new Gentleman_of_Fortune();
+		$gof_conn = $gof->grapple_ojs($db);
+		foreach($abstracts as $abstract_id) {
+			if(!is_int($abstract_id) ) continue;
+			$abstract[] = $gof->get_ojs_abstract($abstract_id, $gof_conn);
+		}
+		return $abstract_info;
+	}
+
+	function ojs_abstract($abstract_id, $db){
+		$abstracts = get_ojs_abstracts(array($abstract_id), $db);
+
+		foreach($abstracts as $abstract) {
+
+		// Filter out the excerpt from the text
+		$excerpt = strip_tags($abstract->text);
+		$excerpt = preg_replace('/\&nbsp;/', ' ', $excerpt);
+
+		// Truncate the excerpt to the proper length
+		$excerpt_words_length = str_word_count($excerpt);
+		$excerpt_words = explode(' ', $excerpt);
+		$excerpt_length = (is_int($args['excerpt_length']) ) ? $args['excerpt_length'] : 55;
+
+		foreach($excerpt_words as $word){
+			static $i;
+			$i++;
+			if($i > $excerpt_length) { $i = 0; break; }
+			$abstract->excerpt .= $word.' ';
+		}
+		$abstract->excerpt .= (array_key_exists('more', $args)) ? $args['more'] : '[&hellip;]';
+
+		// Get the galleys
+		$article_galleys = $doc->getElementById('articleFullText');
+		$abstract->galleys = array();
+		if(gettype($article_galleys) == 'DomDocument') {
+
+			foreach($article_galleys->getElementsByTagName('a') as $galley)
+				$abstract->galleys[] = $doc->saveHTML($galley);		
+		}
+
+		
+		}
+		return $abstract;
 	}
 
 }
