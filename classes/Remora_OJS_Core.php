@@ -89,39 +89,54 @@ class Remora_OJS_Core {
 	 * Returns:
 	 * Array
 	 */
-	function get_abstract_by_id($article_id, $args = array()){
-		$article_id = (int) $article_id;
-		$article_page = "/article/view/".$article_id;
-		$article = $this->get_journal_path($article_page, true);
+	function get_abstract_by_id($article_ids, $args = array()){
+		// $article_id = (int) $article_id;
+		
+		// $article_page = "/article/view/".$article_id;
+		// $article = $this->get_journal_path($article_page, true);
 
-		$abstract->type = 'abstract';
+		// $abstract->type = 'abstract';
 
-		// Load the output into a DOMDocument to get the values we need
-		$doc = new DOMDocument();
-		$dom -> substituteEntities = false;
-		$doc->loadHTML('<?xml encoding="UTF-8">' . $article->output);
+		// // Load the output into a DOMDocument to get the values we need
+		// $doc = new DOMDocument();
+		// $dom -> substituteEntities = false;
+		// $doc->loadHTML('<?xml encoding="UTF-8">' . $article->output);
 
-		// A bit of a workaround to get special characters to work with the saveXML method we have to use later
-		// output 
-		//$docXML->text = $doc->saveHTML($article_text); 
+		// // A bit of a workaround to get special characters to work with the saveXML method we have to use later
+		// // output 
+		// //$docXML->text = $doc->saveHTML($article_text); 
 
-		// If there's no title, don't bother
-		if(!$doc->getElementById('articleTitle')) return false;
+		// // If there's no title, don't bother
+		// if(!$doc->getElementById('articleTitle')) return false;
 
-		// Get the title
-		$article_title = $doc->getElementById('articleTitle');
-		$abstract->title = strip_tags($article_title->nodeValue);
+		// // Get the title
+		// $article_title = $doc->getElementById('articleTitle');
+		// $abstract->title = strip_tags($article_title->nodeValue);
 
-		// Get the authors
-		$article_authors = $doc->getElementById('authorString');
-		$abstract->authors = strip_tags($article_authors->nodeValue);
+		// // Get the authors
+		// $article_authors = $doc->getElementById('authorString');
+		// $abstract->authors = strip_tags($article_authors->nodeValue);
 
-		// Get the link
-		$abstract->link = preg_replace('#\/article\/view\/(\d*)\/?$#', $this->local_url.'/\1', $article_page);
+		// // Get the link
+		// $abstract->link = preg_replace('#\/article\/view\/(\d*)\/?$#', $this->local_url.'/\1', $article_page);
 
 		// Get the abstract Text
 		//$article_text->createEntityReference("amp");
-		$article_text = $doc->getElementById('articleAbstract');
+		// $article_text = $doc->getElementById('articleAbstract');
+
+		
+		// get the articles using our new function
+		for($i = 0; $article_ids[$i] != count($article_id); $i++) {
+				$ids[] = (int) $article_ids[$i];
+		}
+		
+		$abstracts = $this->get_ojs_abstracts($ids, $args['db']);
+
+		vox($abstracts);
+		return;
+		
+
+
 		// Remove the <h4></h4> and <br> at the top
 		if(get_class($article_text) == 'DOMElement') {
 			$text_h4 = $article_text->getElementsByTagName('h4');
@@ -333,7 +348,7 @@ class Remora_OJS_Core {
 			if(!is_int($abstract_id) ) continue;
 			$abstract[] = $gof->get_ojs_abstract($abstract_id, $gof_conn);
 		}
-		return $abstract_info;
+		return $abstract;
 	}
 
 	function ojs_abstract($abstract_id, $db){
@@ -342,32 +357,32 @@ class Remora_OJS_Core {
 		foreach($abstracts as $abstract) {
 
 		// Filter out the excerpt from the text
-		$excerpt = strip_tags($abstract->text);
-		$excerpt = preg_replace('/\&nbsp;/', ' ', $excerpt);
+			$excerpt = strip_tags($abstract->text);
+			$excerpt = preg_replace('/\&nbsp;/', ' ', $excerpt);
 
 		// Truncate the excerpt to the proper length
-		$excerpt_words_length = str_word_count($excerpt);
-		$excerpt_words = explode(' ', $excerpt);
-		$excerpt_length = (is_int($args['excerpt_length']) ) ? $args['excerpt_length'] : 55;
+			$excerpt_words_length = str_word_count($excerpt);
+			$excerpt_words = explode(' ', $excerpt);
+			$excerpt_length = (is_int($args['excerpt_length']) ) ? $args['excerpt_length'] : 55;
 
-		foreach($excerpt_words as $word){
-			static $i;
-			$i++;
-			if($i > $excerpt_length) { $i = 0; break; }
-			$abstract->excerpt .= $word.' ';
-		}
-		$abstract->excerpt .= (array_key_exists('more', $args)) ? $args['more'] : '[&hellip;]';
+			foreach($excerpt_words as $word){
+				static $i;
+				$i++;
+				if($i > $excerpt_length) { $i = 0; break; }
+				$abstract->excerpt .= $word.' ';
+			}
+			$abstract->excerpt .= (array_key_exists('more', $args)) ? $args['more'] : '[&hellip;]';
 
 		// Get the galleys
-		$article_galleys = $doc->getElementById('articleFullText');
-		$abstract->galleys = array();
-		if(gettype($article_galleys) == 'DomDocument') {
+			$article_galleys = $doc->getElementById('articleFullText');
+			$abstract->galleys = array();
+			if(gettype($article_galleys) == 'DomDocument') {
 
-			foreach($article_galleys->getElementsByTagName('a') as $galley)
-				$abstract->galleys[] = $doc->saveHTML($galley);		
-		}
+				foreach($article_galleys->getElementsByTagName('a') as $galley)
+					$abstract->galleys[] = $doc->saveHTML($galley);		
+			}
 
-		
+
 		}
 		return $abstract;
 	}

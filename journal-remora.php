@@ -22,6 +22,7 @@ class Journal_Remora {
 	 */
 	function load_resources() {
 		// Required classes
+		require_once(plugin_dir_path( __FILE__).'/classes/Gentleman_of_Fortune.php');
 		require_once(plugin_dir_path( __FILE__).'/classes/Remora_OJS_Core.php');
 		if(include_once(plugin_dir_path( __FILE__).'/classes/Remora_OJS_Widget.php')) {
 			add_action( 'widgets_init', array('Remora_OJS_Widget', 'register_widget') );
