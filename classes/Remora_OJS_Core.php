@@ -127,10 +127,10 @@ class Remora_OJS_Core {
 		for($i = 0; $article_ids[$i] != count($article_id); $i++) {
 			$ids[] = (int) $article_ids[$i];
 		}
-		
+
 		$abstracts = $this->get_ojs_abstracts($ids, $args['db']);
 
-		return;
+		return $abstracts;
 		
 
 
@@ -363,15 +363,23 @@ class Remora_OJS_Core {
 	 *
 	 * Returns array of abstract titles and abstracts
 	 */
-	function get_ojs_abstracts($abstracts, $db){
-		$gof = new Gentleman_of_Fortune();
-		if(!$gof_conn = $gof->grapple_ojs($db)) return false;
+	function get_ojs_abstracts($abstract_ids, $db){
+		// if(!is_array($abstract_ids) ){
+		// 	if(is_int($abstract_ids) )
+		// 		$abstract_ids = array($abstract_ids);
+		// 	else return false;
+		// }
 
-		foreach($abstracts as $abstract_id) {
-			if(!is_int($abstract_id) ) continue;
-			$abstract[] = $gof->get_ojs_abstract($abstract_id, $gof_conn);
-		}
-		return $abstract;
+		$gof = new Gentleman_of_Fortune();
+		$gof_conn = $gof->grapple_ojs($db);
+
+		foreach($abstract_ids as $id) 
+			$abstracts[] = $gof->get_abstract($id, $gof_conn);
+		
+
+		$gof_conn->close();
+
+		return $abstracts;
 	}
 
 	function ojs_abstract($abstract_id, $db){

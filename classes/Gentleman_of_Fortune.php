@@ -9,17 +9,25 @@ class Gentleman_of_Fortune {
 	 * 
 	 * Returns array of abstract info
 	 */
-	function get_ojs_abstract($id, $conn){
-		$article_id = (int) $id;
+	function get_abstract($id, $conn){
 
-		$abstract->title_q = "SELECT setting_value FROM  `article_settings` WHERE article_id = {$article_id} AND setting_name =  \"cleanTitle\") LIMIT 1;";
-		$abstract->text_q = "SELECT setting_value FROM  `article_settings` WHERE article_id = {$article_id} AND setting_name =  \"abstract\") LIMIT 1;";
+		$abstract->id = (int) $id;
 
-		$abstract->title = ($results = $conn->query($abstract->title_q)) ? $results->fetch_array(MYSQLI_NUM) : null;
-		$abstract->text = ($results = $conn->query($abstract->text_q)) ? $results->fetch_array(MYSQLI_NUM) : null;
+		$abstract->queries = array(
+			'title' => "SELECT `setting_value` FROM  `article_settings` WHERE article_id = {$abstract->id} AND setting_name =  \"cleanTitle\" LIMIT 1;",
+			'text' => "SELECT `setting_value` FROM  `article_settings` WHERE article_id = {$abstract->id} AND setting_name =  \"abstract\" LIMIT 1;"
+			);
+
+		foreach($abstract->queries as $key => $query) {
+			if ($result = $conn->query($query) ) {
+				$obj = $result->fetch_object();
+				$abstract->$key = $obj->setting_value;
+				$result->close();
+			}
+		}
 
 		return $abstract;
-		}
+	}
 
 	/** 
 	 * Get WP auth

@@ -28,9 +28,10 @@ class Remora_OJS_Widget extends WP_Widget {
 		if ( ! empty( $title ) )
 			echo $args['before_title'] . $title . $args['after_title'];
 
-			// Show each requested article excerpt
+		// Show each requested article excerpt
 		$ojs_articles = $remoraOJS->get_abstract_by_id($articles, array('excerpt_length'=> 10, 'db'=>cfct_get_option('cfct_ojs_db') ) );
 
+		vox($ojs_articles);
 		if(is_array($ojs_articles))
 			foreach($ojs_articles as $article){
 				echo '<div class="excerpt">
