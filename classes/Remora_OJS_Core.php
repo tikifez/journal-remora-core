@@ -35,6 +35,13 @@ class Remora_OJS_Core {
 		// Get the resolved, rendered page
 		$page->output = stream_get_contents(( fopen($page->url, 'r')) );
 
+		// Get the page title
+		$doc = new DOMDocument();
+		$doc -> substituteEntities = false;
+		$doc->loadHTML('<?xml encoding="UTF-8">' . $page->output);
+		$title_el = $doc->getElementById('articleTitle');
+		$page->title = $title_el->nodeValue;
+
 		return $page;
 	}
 
@@ -98,16 +105,7 @@ class Remora_OJS_Core {
 		// $abstract->type = 'abstract';
 
 		// // Load the output into a DOMDocument to get the values we need
-		// $doc = new DOMDocument();
-		// $dom -> substituteEntities = false;
-		// $doc->loadHTML('<?xml encoding="UTF-8">' . $article->output);
-
-		// // A bit of a workaround to get special characters to work with the saveXML method we have to use later
-		// // output 
-		// //$docXML->text = $doc->saveHTML($article_text); 
-
-		// // If there's no title, don't bother
-		// if(!$doc->getElementById('articleTitle')) return false;
+		// 
 
 		// // Get the title
 		// $article_title = $doc->getElementById('articleTitle');
@@ -127,12 +125,11 @@ class Remora_OJS_Core {
 		
 		// get the articles using our new function
 		for($i = 0; $article_ids[$i] != count($article_id); $i++) {
-				$ids[] = (int) $article_ids[$i];
+			$ids[] = (int) $article_ids[$i];
 		}
 		
 		$abstracts = $this->get_ojs_abstracts($ids, $args['db']);
 
-		vox($abstracts);
 		return;
 		
 
@@ -292,18 +289,43 @@ class Remora_OJS_Core {
 	 * DOM object with links changed to local
 	 */
 	function make_links_local(&$dom, $translations = null){
+
+		// These regular expressions deliberately lack enclosing tags because we're not done building them yet
 		$translations = array(
 			'\/article\/view\/(\d*)\/?$' => '/\1',
 			'\/article\/view\/(\d*)\/(.*)' => '/\1/?galley=\2'
 			);
 
+		$specials = array(
+			'pdf' => array('old' => '\/article\/view\/(\d*)\/(.*)', 'new' => '/article/download/\1/\2' )
+
+			);
+
 		foreach ($dom->getElementsByTagName('a') as $dom_link) {
+
+			// Standard conversion to local
 			$link = $dom_link->getAttribute('href');
 			foreach($translations as $old => $new) {
-				$old_url = $this->journal_url.$old;
-				$new_url = $this->local_url.$new;
+
+				// Handle special cases
+				$node_value = strtolower($dom_link->nodeValue);
+				if(array_key_exists($node_value, $specials) ) {
+					
+					$old_url = $this->journal_url.$specials[$node_value]['old'];
+					$new_url = $this->journal_url.$specials[$node_value]['new'];
+				}
+
+				// Standard conversion
+				else {
+					
+					$old_url = $this->journal_url.$old;
+					$new_url = $this->local_url.$new;
+				}
+
+				// Perform conversion
 				$link = preg_replace('#'.$old_url.'#', $new_url, $link);
 				$dom_link->setAttribute('href', $link);
+
 			}
 			$dom->saveHTML();
 		}
@@ -343,7 +365,8 @@ class Remora_OJS_Core {
 	 */
 	function get_ojs_abstracts($abstracts, $db){
 		$gof = new Gentleman_of_Fortune();
-		$gof_conn = $gof->grapple_ojs($db);
+		if(!$gof_conn = $gof->grapple_ojs($db)) return false;
+
 		foreach($abstracts as $abstract_id) {
 			if(!is_int($abstract_id) ) continue;
 			$abstract[] = $gof->get_ojs_abstract($abstract_id, $gof_conn);

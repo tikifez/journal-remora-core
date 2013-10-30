@@ -31,68 +31,67 @@ class Remora_OJS_Widget extends WP_Widget {
 			// Show each requested article excerpt
 		$ojs_articles = $remoraOJS->get_abstract_by_id($articles, array('excerpt_length'=> 10, 'db'=>cfct_get_option('cfct_ojs_db') ) );
 
-		return;
-
-		foreach($ojs_articles as $article){
-			echo '<div class="excerpt">
-			<header>
-			<h4 class="excerpt-title">
-			<a href="'.$abstract->link.'">'.$abstract->title.'</a>
-			</h4>
-			<div class="excerpt-authors byline">
-			'.$abstract->authors.'
-			</div>
-			</header>
-			<div class="excerpt-text">
-			'.$abstract->excerpt.'
-			</div>
-			<ul class="excerpt-galleys">';
-			
-			foreach($abstract->galleys as $galley) {
-				echo "<li>$galley</li>";
+		if(is_array($ojs_articles))
+			foreach($ojs_articles as $article){
+				echo '<div class="excerpt">
+				<header>
+				<h4 class="excerpt-title">
+				<a href="'.$abstract->link.'">'.$abstract->title.'</a>
+				</h4>
+				<div class="excerpt-authors byline">
+				'.$abstract->authors.'
+				</div>
+				</header>
+				<div class="excerpt-text">
+				'.$abstract->excerpt.'
+				</div>
+				<ul class="excerpt-galleys">';
+				
+				foreach($abstract->galleys as $galley) {
+					echo "<li>$galley</li>";
+				}
+				echo'
+				</ul>
+				</div>';
 			}
-			echo'
-			</ul>
-			</div>';
+
+			echo $args['after_widget'];
 		}
 
-		echo $args['after_widget'];
-	}
+		public function form( $instance ) {
+			if ( isset( $instance[ 'title' ] ) ) {
+				$title = $instance[ 'title' ];
+			}
+			else {
+				$title = __( 'Article Excerpts', 'remora_ojs' );
+			}
+			if ( isset( $instance[ 'articles' ] ) ) {
+				$articles = $instance[ 'articles' ];
+			}
+			else {
+				$articles = __( '', 'remora_ojs' );
+			}
+			?>
+			<p>
+				<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Title:' ); ?>
+					<input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" />
+				</label> 
+			</p>
+			<p>
+				<label for="<?php echo $this->get_field_id( 'articles' ); ?>"><?php _e( 'OJS Articles to Share:' ); ?>
+					<input class="widefat" id="<?php echo $this->get_field_id( 'articles' ); ?>" name="<?php echo $this->get_field_name( 'articles' ); ?>" type="text" value="<?php echo esc_attr( $articles ); ?>" /><br/>
+					<small>Enter OJS article IDs separated by commas.</small>
+				</label> 
+			</p>
+			<?php 
+		}
 
-	public function form( $instance ) {
-		if ( isset( $instance[ 'title' ] ) ) {
-			$title = $instance[ 'title' ];
-		}
-		else {
-			$title = __( 'Article Excerpts', 'remora_ojs' );
-		}
-		if ( isset( $instance[ 'articles' ] ) ) {
-			$articles = $instance[ 'articles' ];
-		}
-		else {
-			$articles = __( '', 'remora_ojs' );
-		}
-		?>
-		<p>
-			<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Title:' ); ?>
-				<input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" />
-			</label> 
-		</p>
-		<p>
-			<label for="<?php echo $this->get_field_id( 'articles' ); ?>"><?php _e( 'OJS Articles to Share:' ); ?>
-				<input class="widefat" id="<?php echo $this->get_field_id( 'articles' ); ?>" name="<?php echo $this->get_field_name( 'articles' ); ?>" type="text" value="<?php echo esc_attr( $articles ); ?>" /><br/>
-				<small>Enter OJS article IDs separated by commas.</small>
-			</label> 
-		</p>
-		<?php 
-	}
-
-	public function update( $new_instance, $old_instance ) {
+		public function update( $new_instance, $old_instance ) {
 		// processes widget options to be saved
-		$instance = array();
-		$instance['title'] = ( ! empty( $new_instance['title'] ) ) ? strip_tags( $new_instance['title'] ) : '';
-		$instance['articles'] = ( ! empty( $new_instance['articles'] ) ) ? trim( preg_replace("/[^0-9, ]/", "", $new_instance['articles']), ",") : '';
+			$instance = array();
+			$instance['title'] = ( ! empty( $new_instance['title'] ) ) ? strip_tags( $new_instance['title'] ) : '';
+			$instance['articles'] = ( ! empty( $new_instance['articles'] ) ) ? trim( preg_replace("/[^0-9, ]/", "", $new_instance['articles']), ",") : '';
 
-		return $instance;
+			return $instance;
+		}
 	}
-}

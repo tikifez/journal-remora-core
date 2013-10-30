@@ -26,8 +26,15 @@ class Gentleman_of_Fortune {
 	 *
 	 */
 	function grapple_ojs($db){
-		// Connect to database 
-		$mysqli = new mysqli(DB_HOST, DB_USER, DB_PASSWORD, $db);
+		// Connect to database
+		if(strstr(DB_HOST, ':')) {
+			$db_host = explode(':', DB_HOST);
+			$host = $db_host[0];
+			$port = $db_host[1];
+		}
+		else $host = DB_HOST;
+
+		$mysqli = new mysqli($host, DB_USER, DB_PASSWORD, $db, $port);
 		if ($mysqli->connect_errno) {
 			printf("Connect failed: %s\n", $mysqli->connect_error);
 			return false;
