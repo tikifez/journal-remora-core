@@ -18,6 +18,32 @@ class Remora_OJS_Widget extends WP_Widget {
 		register_widget( 'Remora_OJS_Widget' );
 	}
 
+	public function widget_old( $args, $instance ) {
+		// outputs the content of the widget
+		$title = apply_filters( 'widget_title', $instance['title'] );
+		$articles = explode(',', $instance['articles'] );
+		$remoraOJS = new Remora_OJS_Core;
+
+		echo $args['before_widget'];
+		if ( ! empty( $title ) )
+			echo $args['before_title'] . $title . $args['after_title'];
+
+			// Show each requested article excerpt
+		foreach($articles as $article){
+			$abstract = $remoraOJS->get_abstract_by_id($article, array('excerpt_length'=> 10));
+
+			if (!$abstract) continue;
+
+			echo '<div class="excerpt">
+			<h4 class="excerpt-title">
+			<a href="'.$abstract->link.'">'.$abstract->title.'</a>
+			</h4>
+			</div>';
+		}
+
+		echo $args['after_widget'];
+	}
+
 	public function widget( $args, $instance ) {
 		// outputs the content of the widget
 		$title = apply_filters( 'widget_title', $instance['title'] );
@@ -29,31 +55,29 @@ class Remora_OJS_Widget extends WP_Widget {
 			echo $args['before_title'] . $title . $args['after_title'];
 
 		// Show each requested article excerpt
-		$ojs_articles = $remoraOJS->get_abstract_by_id($articles, array('excerpt_length'=> 10, 'db'=>cfct_get_option('cfct_ojs_db') ) );
+		$ojs_articles = $remoraOJS->get_abstract_by_id($articles, array('excerpt_length'=> 0, 'db'=>cfct_get_option('cfct_ojs_db') ) );
 
-		vox($ojs_articles);
 		if(is_array($ojs_articles))
-			foreach($ojs_articles as $article){
-				echo '<div class="excerpt">
-				<header>
-				<h4 class="excerpt-title">
-				<a href="'.$abstract->link.'">'.$abstract->title.'</a>
-				</h4>
-				<div class="excerpt-authors byline">
-				'.$abstract->authors.'
-				</div>
-				</header>
-				<div class="excerpt-text">
-				'.$abstract->excerpt.'
-				</div>
-				<ul class="excerpt-galleys">';
-				
-				foreach($abstract->galleys as $galley) {
-					echo "<li>$galley</li>";
-				}
-				echo'
-				</ul>
-				</div>';
+			foreach($ojs_articles as $abstract){
+				echo <<<HTML
+<div class="excerpt">
+	<header>
+		<h4 class="excerpt-title">
+			<a href="{$abstract->link}">{$abstract->title}</a>
+		</h4>
+HTML;
+				if(isset($abstract->authors) ) echo <<<HTML
+		<div class="excerpt-authors byline">
+			{$abstract->authors}
+		</div>
+HTML;
+				echo <<<HTML
+	</header>
+	<div class="excerpt-text">
+		{$abstract->excerpt}
+	</div>
+</div>
+HTML;
 			}
 
 			echo $args['after_widget'];
@@ -74,15 +98,15 @@ class Remora_OJS_Widget extends WP_Widget {
 			}
 			?>
 			<p>
-				<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Title:' ); ?>
-					<input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" />
-				</label> 
+			<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Title:' ); ?>
+			<input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" />
+			</label> 
 			</p>
 			<p>
-				<label for="<?php echo $this->get_field_id( 'articles' ); ?>"><?php _e( 'OJS Articles to Share:' ); ?>
-					<input class="widefat" id="<?php echo $this->get_field_id( 'articles' ); ?>" name="<?php echo $this->get_field_name( 'articles' ); ?>" type="text" value="<?php echo esc_attr( $articles ); ?>" /><br/>
-					<small>Enter OJS article IDs separated by commas.</small>
-				</label> 
+			<label for="<?php echo $this->get_field_id( 'articles' ); ?>"><?php _e( 'OJS Articles to Share:' ); ?>
+			<input class="widefat" id="<?php echo $this->get_field_id( 'articles' ); ?>" name="<?php echo $this->get_field_name( 'articles' ); ?>" type="text" value="<?php echo esc_attr( $articles ); ?>" /><br/>
+			<small>Enter OJS article IDs separated by commas.</small>
+			</label> 
 			</p>
 			<?php 
 		}

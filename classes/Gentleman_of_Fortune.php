@@ -25,7 +25,7 @@ class Gentleman_of_Fortune {
 				$result->close();
 			}
 		}
-
+		
 		return $abstract;
 	}
 

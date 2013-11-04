@@ -18,7 +18,7 @@ jQuery(function($) {
 	});
 
 	function resizeFrame(){
-		$('iframe.remora-frame').height( $('iframe.remora-frame').contents().height() );
+		$('iframe.remora-frame').height( $('iframe.remora-frame').contents().height() + 10 );
 	}
 });
 

@@ -96,39 +96,115 @@ class Remora_OJS_Core {
 	 * Returns:
 	 * Array
 	 */
-	function get_abstract_by_id($article_ids, $args = array()){
-		// $article_id = (int) $article_id;
-		
-		// $article_page = "/article/view/".$article_id;
-		// $article = $this->get_journal_path($article_page, true);
+	function get_abstract_by_id_old($article_id, $args = array()){
+		$article_id = (int) $article_id;
+		$article_page = "/article/view/".$article_id;
+		$article = $this->get_journal_path($article_page, true);
 
-		// $abstract->type = 'abstract';
+		$abstract->type = 'abstract';
 
-		// // Load the output into a DOMDocument to get the values we need
-		// 
+		// Load the output into a DOMDocument to get the values we need
+		$doc = new DOMDocument();
+		$dom -> substituteEntities = false;
+		$doc->loadHTML('<?xml encoding="UTF-8">' . $article->output);
 
-		// // Get the title
-		// $article_title = $doc->getElementById('articleTitle');
-		// $abstract->title = strip_tags($article_title->nodeValue);
+		// A bit of a workaround to get special characters to work with the saveXML method we have to use later
+		// output 
+		//$docXML->text = $doc->saveHTML($article_text); 
 
-		// // Get the authors
-		// $article_authors = $doc->getElementById('authorString');
-		// $abstract->authors = strip_tags($article_authors->nodeValue);
+		// If there's no title, don't bother
+		if(!$doc->getElementById('articleTitle')) return false;
 
-		// // Get the link
-		// $abstract->link = preg_replace('#\/article\/view\/(\d*)\/?$#', $this->local_url.'/\1', $article_page);
+		// Get the title
+		$article_title = $doc->getElementById('articleTitle');
+		$abstract->title = strip_tags($article_title->nodeValue);
+
+		// Get the authors
+		$article_authors = $doc->getElementById('authorString');
+		$abstract->authors = strip_tags($article_authors->nodeValue);
+
+		// Get the link
+		$abstract->link = preg_replace('#\/article\/view\/(\d*)\/?$#', $this->local_url.'/\1', $article_page);
 
 		// Get the abstract Text
 		//$article_text->createEntityReference("amp");
-		// $article_text = $doc->getElementById('articleAbstract');
+		$article_text = $doc->getElementById('articleAbstract');
+		// Remove the <h4></h4> and <br> at the top
+		if(get_class($article_text) == 'DOMElement') {
+			$text_h4 = $article_text->getElementsByTagName('h4');
+			$article_text->removeChild($text_h4->item(0));
+			while ($text_br = $article_text->getElementsByTagName('br')->item(0)) 
+				$article_text->removeChild($text_br);
+		}
 
+		// Import the abstract dom node into a new domdocument to deal with PHP < 5.3.6
+		$abstract->dom = new DomDocument();
+		$abstract->dom->loadXML("<article></article>");
+		$article_abstract_node = $abstract->dom->importNode($article_text, true);
+		$abstract->dom->documentElement->appendChild($article_abstract_node);
+		$abstract->text = $abstract->dom->saveHTML();
+
+
+		// Filter out the excerpt from the text
+		$excerpt = strip_tags($abstract->text);
+		$excerpt = preg_replace('/\&nbsp;/', ' ', $excerpt);
+
+		// Truncate the excerpt to the proper length
+		$excerpt_words_length = str_word_count($excerpt);
+		$excerpt_words = explode(' ', $excerpt);
+		$excerpt_length = (is_int($args['excerpt_length']) ) ? $args['excerpt_length'] : 55;
+
+		foreach($excerpt_words as $word){
+			static $i;
+			$i++;
+			if($i > $excerpt_length) { $i = 0; break; }
+			$abstract->excerpt .= $word.' ';
+		}
+		$abstract->excerpt .= (array_key_exists('more', $args)) ? $args['more'] : '[&hellip;]';
+
+		// Get the galleys
+		$article_galleys = $doc->getElementById('articleFullText');
+		$abstract->galleys = array();
+		if(gettype($article_galleys) == 'DomDocument') {
+
+			foreach($article_galleys->getElementsByTagName('a') as $galley)
+				$abstract->galleys[] = $doc->saveHTML($galley);		
+		}
+
+		return $abstract;
+	}
+
+	/**
+	 * Truncates a string to a set number of words
+	 *
+	 * @str - String to truncate
+	 * @length - Number of words to truncate it to
+	 */
+	function truncate_string($str, $length = 55){
+
+		$excerpt_words_length = str_word_count($str);
+		$excerpt_words = explode(' ', $str);
+		$excerpt_length = (is_int($length) ) ? $length : 55;
+
+		foreach($excerpt_words as $word){
+			static $i;
+			$i++;
+			if($i > $excerpt_length) { $i = 0; break; }
+			$truncated .= $word.' ';
+		}
+
+		return $truncated;
+	}
+	
+	function get_abstract_by_id($article_ids, $args = array()){
+		extract($args);
 		
 		// get the articles using our new function
 		for($i = 0; $article_ids[$i] != count($article_id); $i++) {
 			$ids[] = (int) $article_ids[$i];
 		}
 
-		$abstracts = $this->get_ojs_abstracts($ids, $args['db']);
+		$abstracts = $this->get_ojs_abstracts($ids, $db, $excerpt_length);
 
 		return $abstracts;
 		
@@ -363,7 +439,7 @@ class Remora_OJS_Core {
 	 *
 	 * Returns array of abstract titles and abstracts
 	 */
-	function get_ojs_abstracts($abstract_ids, $db){
+	function get_ojs_abstracts($abstract_ids, $db, $length){
 		// if(!is_array($abstract_ids) ){
 		// 	if(is_int($abstract_ids) )
 		// 		$abstract_ids = array($abstract_ids);
@@ -373,9 +449,15 @@ class Remora_OJS_Core {
 		$gof = new Gentleman_of_Fortune();
 		$gof_conn = $gof->grapple_ojs($db);
 
-		foreach($abstract_ids as $id) 
-			$abstracts[] = $gof->get_abstract($id, $gof_conn);
-		
+		foreach($abstract_ids as $id) {
+
+		for($i = 0; $i < count($abstract_ids); $i++)
+			$abstract = $gof->get_abstract($id, $gof_conn);
+			$abstract->link = $this->journal_url.'/article/view/'.$abstract_id;
+			$abstract->excerpt = $this->truncate_string($abstract->text, $length);
+
+			$abstracts[] = $abstract;
+		}
 
 		$gof_conn->close();
 
@@ -384,6 +466,7 @@ class Remora_OJS_Core {
 
 	function ojs_abstract($abstract_id, $db){
 		$abstracts = get_ojs_abstracts(array($abstract_id), $db);
+
 
 		foreach($abstracts as $abstract) {
 
