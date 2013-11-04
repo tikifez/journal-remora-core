@@ -453,7 +453,8 @@ class Remora_OJS_Core {
 
 		for($i = 0; $i < count($abstract_ids); $i++)
 			$abstract = $gof->get_abstract($id, $gof_conn);
-			$abstract->link = $this->journal_url.'/article/view/'.$abstract_id;
+			$abstract->link = preg_replace('#'.$this->journal_url.'\/article\/view\/(\d*)\/?$#', $this->local_url.'/\1', $this->journal_url.'/article/view/'.$id);
+
 			$abstract->excerpt = $this->truncate_string($abstract->text, $length);
 
 			$abstracts[] = $abstract;
