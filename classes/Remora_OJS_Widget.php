@@ -57,29 +57,32 @@ class Remora_OJS_Widget extends WP_Widget {
 		// Show each requested article excerpt
 		$ojs_articles = $remoraOJS->get_abstract_by_id($articles, array('excerpt_length'=> 0, 'db'=>cfct_get_option('cfct_ojs_db') ) );
 
+		$html = '';
 		if(is_array($ojs_articles))
 			foreach($ojs_articles as $abstract){
-				echo <<<HTML
-<div class="excerpt">
-	<header>
-		<h4 class="excerpt-title">
-			<a href="{$abstract->link}">{$abstract->title}</a>
-		</h4>
-HTML;
-				if(isset($abstract->authors) ) echo <<<HTML
-		<div class="excerpt-authors byline">
-			{$abstract->authors}
-		</div>
-HTML;
-				echo <<<HTML
-	</header>
-	<div class="excerpt-text">
-		{$abstract->excerpt}
-	</div>
-</div>
-HTML;
+
+				$html .= '<div class="excerpt">
+				<header>
+				<h4 class="excerpt-title"><a href="'.$abstract->link.'">'.$abstract->title.'</a></h4>';
+
+				if(isset($abstract->authors) ) $html .= '<div class="excerpt-authors byline">'.$abstract->authors.'</div>';
+				
+				$html .= '
+				</header>
+				<div class="excerpt-text">
+				'.$abstract->excerpt.'
+				</div><!-- /excerpt-text -->
+				</div><!-- /.excerpt -->';
+
+				if(current_user_can('activate_plugins') && $abstract->errors) {
+					$html .= "<div class=\"alert alert-warning\">\n<p>Encountered the following errors while retrieving the abstract:</p><ul>";
+					foreach($abstract->errors as $error)
+						$html .= "<li>{$error}</li>";
+					$html .= "</ul></div>";
+				}
 			}
 
+			echo $html;
 			echo $args['after_widget'];
 		}
 

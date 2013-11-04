@@ -24,8 +24,9 @@ class Gentleman_of_Fortune {
 				$abstract->$key = $obj->setting_value;
 				$result->close();
 			}
+			else $abstract->errors[] = "Could not retrieve abstract {$key} for article {$id}";
 		}
-		
+
 		return $abstract;
 	}
 
@@ -44,7 +45,7 @@ class Gentleman_of_Fortune {
 
 		$mysqli = new mysqli($host, DB_USER, DB_PASSWORD, $db, $port);
 		if ($mysqli->connect_errno) {
-			printf("Connect failed: %s\n", $mysqli->connect_error);
+			if(current_user_can('activate_plugins') ) echo "<div class=\"alert alert-warning\">Connect failed: {$mysqli->connect_error}</div>" ;
 			return false;
 		}
 
