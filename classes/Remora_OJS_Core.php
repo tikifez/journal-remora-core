@@ -25,7 +25,7 @@ class Remora_OJS_Core {
 
 		// Get any redirects for checking
 		$page->page_headers = get_headers($page->url, 1);
-		
+
 		// If only the exact url with no redirects are desired, fail if that's not what we're getting
 
 		if($source_only && $page->url != $page->page_headers['Location']) {
@@ -49,7 +49,7 @@ class Remora_OJS_Core {
 	 * Cleans up the messy OJS headers
 	 */
 	function clean_html(&$doc){
-		// Remove <!DOCTYPE 
+		// Remove <!DOCTYPE
 		$doc->removeChild($doc->firstChild);
 
 		// Remove <title></title>
@@ -109,8 +109,8 @@ class Remora_OJS_Core {
 		$doc->loadHTML('<?xml encoding="UTF-8">' . $article->output);
 
 		// A bit of a workaround to get special characters to work with the saveXML method we have to use later
-		// output 
-		//$docXML->text = $doc->saveHTML($article_text); 
+		// output
+		//$docXML->text = $doc->saveHTML($article_text);
 
 		// If there's no title, don't bother
 		if(!$doc->getElementById('articleTitle')) return false;
@@ -133,7 +133,7 @@ class Remora_OJS_Core {
 		if(get_class($article_text) == 'DOMElement') {
 			$text_h4 = $article_text->getElementsByTagName('h4');
 			$article_text->removeChild($text_h4->item(0));
-			while ($text_br = $article_text->getElementsByTagName('br')->item(0)) 
+			while ($text_br = $article_text->getElementsByTagName('br')->item(0))
 				$article_text->removeChild($text_br);
 		}
 
@@ -168,7 +168,7 @@ class Remora_OJS_Core {
 		if(gettype($article_galleys) == 'DomDocument') {
 
 			foreach($article_galleys->getElementsByTagName('a') as $galley)
-				$abstract->galleys[] = $doc->saveHTML($galley);		
+				$abstract->galleys[] = $doc->saveHTML($galley);
 		}
 
 		return $abstract;
@@ -195,10 +195,10 @@ class Remora_OJS_Core {
 
 		return $truncated;
 	}
-	
+
 	function get_abstract_by_id($article_ids, $args = array()){
 		extract($args);
-		
+
 		// get the articles using our new function
 		for($i = 0; $article_ids[$i] != count($article_id); $i++) {
 			$ids[] = (int) $article_ids[$i];
@@ -207,14 +207,14 @@ class Remora_OJS_Core {
 		$abstracts = $this->get_ojs_abstracts($ids, $db, $excerpt_length);
 
 		return $abstracts;
-		
+
 
 
 		// Remove the <h4></h4> and <br> at the top
 		if(get_class($article_text) == 'DOMElement') {
 			$text_h4 = $article_text->getElementsByTagName('h4');
 			$article_text->removeChild($text_h4->item(0));
-			while ($text_br = $article_text->getElementsByTagName('br')->item(0)) 
+			while ($text_br = $article_text->getElementsByTagName('br')->item(0))
 				$article_text->removeChild($text_br);
 		}
 
@@ -249,7 +249,7 @@ class Remora_OJS_Core {
 		if(gettype($article_galleys) == 'DomDocument') {
 
 			foreach($article_galleys->getElementsByTagName('a') as $galley)
-				$abstract->galleys[] = $doc->saveHTML($galley);		
+				$abstract->galleys[] = $doc->saveHTML($galley);
 		}
 
 		return $abstract;
@@ -299,7 +299,7 @@ class Remora_OJS_Core {
 			if(is_int($journal_issue_id)) $issue_id = (int) $journal_issue_id;
 			$issue = $this->get_journal_path("/issue/view/".$issue_id."/showToc", $asAjax, true);
 		}
-		else $issue = $this->get_journal_path("/issue/current/showToc", $asAjax); 
+		else $issue = $this->get_journal_path("/issue/current/showToc", $asAjax);
 
 		if(!$issue) return $issue;
 		$issue->type = "issue";
@@ -316,7 +316,7 @@ class Remora_OJS_Core {
 		$doc = new DOMDocument();
 		$doc->loadHTML('<?xml encoding="'.$pageEncoding.'">' . $journal_page->output);
 
-		$this->make_links_local(&$doc);
+		$this->make_links_local($doc);
 		$this->clean_html($doc);
 
 		echo $doc->saveHTML();
@@ -386,14 +386,14 @@ class Remora_OJS_Core {
 				// Handle special cases
 				$node_value = strtolower($dom_link->nodeValue);
 				if(array_key_exists($node_value, $specials) ) {
-					
+
 					$old_url = $this->journal_url.$specials[$node_value]['old'];
 					$new_url = $this->journal_url.$specials[$node_value]['new'];
 				}
 
 				// Standard conversion
 				else {
-					
+
 					$old_url = $this->journal_url.$old;
 					$new_url = $this->local_url.$new;
 				}
@@ -494,7 +494,7 @@ class Remora_OJS_Core {
 			if(gettype($article_galleys) == 'DomDocument') {
 
 				foreach($article_galleys->getElementsByTagName('a') as $galley)
-					$abstract->galleys[] = $doc->saveHTML($galley);		
+					$abstract->galleys[] = $doc->saveHTML($galley);
 			}
 
 
