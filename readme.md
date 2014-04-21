@@ -1,6 +1,6 @@
 # Journal Remora
 
-Allows you to access an OJS instance from WordPress.
+WordPress plugin which allows you to access an OJS instance from WordPress.
 
 ## Need some help?
 
