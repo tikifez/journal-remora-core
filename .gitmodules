@@ -1,0 +1,3 @@
+[submodule "assets/lib/acf"]
+	path = assets/lib/acf
+	url = git@github.com:elliotcondon/acf.git
