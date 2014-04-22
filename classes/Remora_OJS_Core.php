@@ -20,6 +20,10 @@ class Remora_OJS_Core {
 	 */
 	function get_journal_path($journal_page, $asAjax = true, $source_only = false){
 
+		if ( !is_object( $page ) ) {
+			$page = new stdClass();
+		}
+
 		// Build the URL
 		$page->url = ($asAjax) ? $this->journal_url.$journal_page."?ajax=".(bool) $asAjax : $this->journal_url.$journal_page;
 
