@@ -6,11 +6,14 @@ class Gentleman_of_Fortune {
 	 *
 	 * @id - Numeric OJS ID of article to get the abstract of
 	 * @conn - Database connection
-	 * 
+	 *
 	 * Returns array of abstract info
 	 */
 	function get_abstract($id, $conn){
 
+		if ( !is_object( $abstract ) ) {
+			$abstract = new stdClass();
+		}
 		$abstract->id = (int) $id;
 
 		$abstract->queries = array(
@@ -30,7 +33,7 @@ class Gentleman_of_Fortune {
 		return $abstract;
 	}
 
-	/** 
+	/**
 	 * Get WP auth
 	 *
 	 */

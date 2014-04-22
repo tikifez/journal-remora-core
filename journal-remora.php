@@ -21,6 +21,10 @@ class Journal_Remora {
 	 * Loads plugin resources
 	 */
 	function load_resources() {
+		// Libraries
+		require_once(plugin_dir_path( __FILE__).'/assets/lib/acf/acf.php');
+		$acf = new acf();
+
 		// Required classes
 		require_once(plugin_dir_path( __FILE__).'/classes/Gentleman_of_Fortune.php');
 		require_once(plugin_dir_path( __FILE__).'/classes/Remora_OJS_Core.php');

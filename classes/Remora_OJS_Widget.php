@@ -66,7 +66,7 @@ class Remora_OJS_Widget extends WP_Widget {
 				<h4 class="excerpt-title"><a href="'.$abstract->link.'">'.$abstract->title.'</a></h4>';
 
 				if(isset($abstract->authors) ) $html .= '<div class="excerpt-authors byline">'.$abstract->authors.'</div>';
-				
+
 				$html .= '
 				</header>
 				<div class="excerpt-text">
@@ -103,15 +103,15 @@ class Remora_OJS_Widget extends WP_Widget {
 			<p>
 			<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Title:' ); ?>
 			<input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" />
-			</label> 
+			</label>
 			</p>
 			<p>
 			<label for="<?php echo $this->get_field_id( 'articles' ); ?>"><?php _e( 'OJS Articles to Share:' ); ?>
 			<input class="widefat" id="<?php echo $this->get_field_id( 'articles' ); ?>" name="<?php echo $this->get_field_name( 'articles' ); ?>" type="text" value="<?php echo esc_attr( $articles ); ?>" /><br/>
 			<small>Enter OJS article IDs separated by commas.</small>
-			</label> 
+			</label>
 			</p>
-			<?php 
+			<?php
 		}
 
 		public function update( $new_instance, $old_instance ) {
